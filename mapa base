@@ -1,1 +1,174 @@
-//codigos 
+#include "pch.h"
+#include <iostream>
+#include <conio.h>
+
+using namespace std;
+using namespace System;
+
+// =========================================================
+// CONFIGURACIÓN EDITABLE (TU ZONA DE CONTROL)
+// =========================================================
+
+const int FILAS = 10;
+const int COLUMNAS = 20;
+
+int mapa[FILAS][COLUMNAS] =
+{
+    {0,0,1,1,2,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0},
+    {0,1,1,0,0,0,2,0,1,0,1,0,0,1,1,1,0,2,0,0},
+    {0,0,0,0,1,0,0,0,1,0,1,2,0,0,0,1,0,0,0,0},
+    {0,2,1,0,1,0,1,0,1,0,0,0,0,1,0,1,0,1,1,0},
+    {0,0,1,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0,0,0},
+    {1,1,1,1,1,0,0,0,0,0,0,2,0,1,1,1,0,1,0,0},
+    {0,0,0,0,1,0,1,1,1,0,1,0,0,0,0,0,0,1,0,0},
+    {0,2,0,0,1,0,0,0,1,0,0,0,2,0,1,1,0,1,0,0},
+    {0,0,0,0,0,0,2,0,1,0,0,0,0,0,0,1,0,1,0,0},
+    {0,0,1,1,1,0,0,0,1,0,2,0,0,1,0,1,0,0,0,0}
+};
+
+// Personajes
+char jugadorChar = '@';
+char enemigoChar = 'X';
+
+ConsoleColor jugadorColor = ConsoleColor::Cyan;
+ConsoleColor enemigoColor = ConsoleColor::Red;
+
+// Posiciones
+int px = 1, py = 1;
+int ex = 10, ey = 5;
+
+int dir = 1;
+int dirY = 1;
+
+
+// =========================================================
+// FUNCIONES BASE
+// =========================================================
+
+void cursor(int x, int y)
+{
+    Console::SetCursorPosition(x, y);
+}
+
+// Colores del mapa
+void setColor(int v)
+{
+    switch (v)
+    {
+    case 0: Console::BackgroundColor = ConsoleColor::Green; break;
+    case 1: Console::BackgroundColor = ConsoleColor::DarkGray; break;
+    case 2: Console::BackgroundColor = ConsoleColor::Red; break;
+    default: Console::BackgroundColor = ConsoleColor::Black; break;
+    }
+}
+
+// Dibuja cada celda como un bloque de color
+void dibujarMapa()
+{
+    for (int i = 0; i < FILAS; i++)
+    {
+        for (int j = 0; j < COLUMNAS; j++)
+        {
+            cursor(j, i);
+            setColor(mapa[i][j]);
+            cout << " ";  // CUADRADO DE COLOR PERFECTO
+        }
+    }
+    Console::BackgroundColor = ConsoleColor::Black;
+}
+
+void dibujarEntidad(int x, int y, char c, ConsoleColor col)
+{
+    cursor(x, y);
+    Console::BackgroundColor = ConsoleColor::Black;
+    Console::ForegroundColor = col;
+    cout << c;
+}
+
+// MOVIMIENTO DEL JUGADOR
+void moverJugador(char t)
+{
+    int nx = px, ny = py;
+    if (t == 'w') ny--;
+    if (t == 's') ny++;
+    if (t == 'a') nx--;
+    if (t == 'd') nx++;
+
+    if (nx >= 0 && nx < COLUMNAS &&
+        ny >= 0 && ny < FILAS &&
+        mapa[ny][nx] != 1)
+    {
+        px = nx;
+        py = ny;
+    }
+}
+
+// MOVIMIENTO DEL ENEMIGO (elige uno)
+// --------------------------------------
+
+//  Horizontal
+void moverEnemigoHorizontal()
+{
+    ex += dir;
+    if (ex <= 0 || ex >= COLUMNAS - 1)
+        dir *= -1;
+}
+
+//  Vertical
+void moverEnemigoVertical()
+{
+    ey += dirY;
+    if (ey <= 0 || ey >= FILAS - 1)
+        dirY *= -1;
+}
+
+//  Mixto (diagonal)
+void moverEnemigoMixto()
+{
+    ex += dir;
+    ey += dirY;
+
+    if (ex <= 0 || ex >= COLUMNAS - 1)
+        dir *= -1;
+    if (ey <= 0 || ey >= FILAS - 1)
+        dirY *= -1;
+}
+
+
+// =========================================================
+// MAIN LOOP
+// =========================================================
+
+int main()
+{
+    Console::CursorVisible = false;
+
+    dibujarMapa();
+
+    while (true)
+    {
+        // borrar entidades
+        dibujarEntidad(px, py, ' ', ConsoleColor::Black);
+        dibujarEntidad(ex, ey, ' ', ConsoleColor::Black);
+
+        // mover jugador
+        if (_kbhit())
+        {
+            char t = _getch();
+            moverJugador(t);
+        }
+
+        // SOLO DEJA 1:
+        moverEnemigoHorizontal();
+        //moverEnemigoVertical();
+        //moverEnemigoMixto();
+
+        // redibujar
+        dibujarEntidad(px, py, jugadorChar, jugadorColor);
+        dibujarEntidad(ex, ey, enemigoChar, enemigoColor);
+
+        _sleep(60);
+    }
+
+    return 0;
+}
